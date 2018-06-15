@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -20,7 +22,8 @@ import joels.com.projectsunshine.utilities.OpenWeatherJsonUtils;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mWeatherTextView;
+    private TextView mWeatherTextView, mErrorMessageDisplay;
+    private ProgressBar mLoadingIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,19 +31,62 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_forecast);
 
         mWeatherTextView = findViewById(R.id.tv_weather_data);
+        mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
 
+        /*
+        * The ProgressBar that will indicate to the user that we are loading data. It will be
+        * hidden when no data is loading.
+        *
+        * Please note: This so called "ProgressBar" isn't a bar by default. It is more of a circle.
+        * We didn't make rules (or the names of Views), we just follow them
+         */
+        mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
+
+        /* Once all of our views are setup, we can load the weather data. */
         loadWeather();
     }
 
     private void loadWeather(){
+        // Call showWeatherDataView before executing the AsyncTask
+        showWeatherDataView();
+
         String location = SunshinePreferences.getPreferredWeatherLocation(this);
         new FetchWeatherTask().execute(location);
 
     }
 
-    // Class that extends AsyncTask to perform network calls
+    /*
+     * This method will hide the weather data and show the error message
+     *
+     * Since it is okay to redundantly set the visibility of a view, we don't need to check whether
+     * each view is curently visible or invisible.
+     */
+    private void showErrorMessage() {
+        /* First, hide the currently visible data */
+        mWeatherTextView.setVisibility(View.INVISIBLE);
 
+        /* Then, show the error */
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+    }
+
+    /*
+    * This method will hide the error message and show the weather data
+    */
+
+    private void showWeatherDataView() {
+        mErrorMessageDisplay.setVisibility(View.INVISIBLE);
+        mWeatherTextView.setVisibility(View.VISIBLE);
+    }
+
+    // Class that extends AsyncTask to perform network calls
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
+
+        // Override onPreExecute and show the loading indicator
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
 
         // Override doInBackgroud method to perform your network requests
         @Override
@@ -70,7 +116,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String[] weatherData) {
+            // As soon as the data is finished loading, hide the loading indicator
+            mLoadingIndicator.setVisibility(View.GONE);
             if (weatherData != null) {
+                // If the weather data was not null, make sure that the data view is visible
+                showWeatherDataView();
                 /*
                 * Iterate through the array and append the String to the TextView. The reason why we
                 * add the "\n\n\n" after the STring is to give visuak separation between each String in the TextView.
@@ -78,6 +128,9 @@ public class MainActivity extends AppCompatActivity {
                 for (String weatherString : weatherData) {
                     mWeatherTextView.append(weatherString + "\n\n\n");
                 }
+            } else {
+                // If the weather data was null, show the error message
+                showErrorMessage();
             }
         }
     }
