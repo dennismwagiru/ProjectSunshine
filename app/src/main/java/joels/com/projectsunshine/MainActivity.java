@@ -3,6 +3,8 @@ package joels.com.projectsunshine;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,7 +24,9 @@ import joels.com.projectsunshine.utilities.OpenWeatherJsonUtils;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mWeatherTextView, mErrorMessageDisplay;
+    private RecyclerView mRecyclerView;
+    private ForecastAdapter forecastAdapter;
+    private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
 
     @Override
@@ -30,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forecast);
 
-        mWeatherTextView = findViewById(R.id.tv_weather_data);
+        mRecyclerView = findViewById(R.id.recyclerview_forecast);
+
         mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
 
         /*
@@ -41,6 +46,29 @@ public class MainActivity extends AppCompatActivity {
         * We didn't make rules (or the names of Views), we just follow them
          */
         mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
+
+        /*
+         * LinearLayoutManager can support HORIZONTAL or VERTICAL orientations. The reverse layout
+         * parameter is useful mostly for HORIZONTAL layouts that should reverse for right to left
+         * languages.
+         */
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
+
+        /*
+         * Use this setting to improve performance if you know that changes in content do not
+         * change the child layout size in the RecyclerView
+         */
+        mRecyclerView.setHasFixedSize(true);
+
+        /*
+         * The ForecastAdapter is responsible for linking our weather data with the Views that
+         * will end up displaying our weather data.
+         */
+        forecastAdapter = new ForecastAdapter();
+
+        /* Setting the adapter attaches it to the RecyclerView in our layout. */
+        mRecyclerView.setAdapter(forecastAdapter);
 
         /* Once all of our views are setup, we can load the weather data. */
         loadWeather();
@@ -63,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showErrorMessage() {
         /* First, hide the currently visible data */
-        mWeatherTextView.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
 
         /* Then, show the error */
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
@@ -75,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showWeatherDataView() {
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
-        mWeatherTextView.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     // Class that extends AsyncTask to perform network calls
@@ -121,13 +149,8 @@ public class MainActivity extends AppCompatActivity {
             if (weatherData != null) {
                 // If the weather data was not null, make sure that the data view is visible
                 showWeatherDataView();
-                /*
-                * Iterate through the array and append the String to the TextView. The reason why we
-                * add the "\n\n\n" after the STring is to give visuak separation between each String in the TextView.
-                 */
-                for (String weatherString : weatherData) {
-                    mWeatherTextView.append(weatherString + "\n\n\n");
-                }
+                // Use forecastAdapter.setWeatherData(weatherData) to pass in the weatherData
+                forecastAdapter.setWeatherData(weatherData);
             } else {
                 // If the weather data was null, show the error message
                 showErrorMessage();
@@ -155,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            mWeatherTextView.setText("");
+            forecastAdapter.setWeatherData(null);
             loadWeather();
             return true;
         }
