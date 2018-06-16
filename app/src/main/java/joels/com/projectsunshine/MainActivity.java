@@ -1,5 +1,6 @@
 package joels.com.projectsunshine;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,17 +13,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.URL;
 
+import joels.com.projectsunshine.ForecastAdapter.ForecastAdapterOnClickHandler;
 import joels.com.projectsunshine.data.SunshinePreferences;
 import joels.com.projectsunshine.utilities.NetworkUtils;
 import joels.com.projectsunshine.utilities.OpenWeatherJsonUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ForecastAdapterOnClickHandler {
 
     private RecyclerView mRecyclerView;
     private ForecastAdapter forecastAdapter;
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
          * The ForecastAdapter is responsible for linking our weather data with the Views that
          * will end up displaying our weather data.
          */
-        forecastAdapter = new ForecastAdapter();
+        forecastAdapter = new ForecastAdapter(this);
 
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
         mRecyclerView.setAdapter(forecastAdapter);
@@ -81,6 +84,18 @@ public class MainActivity extends AppCompatActivity {
         String location = SunshinePreferences.getPreferredWeatherLocation(this);
         new FetchWeatherTask().execute(location);
 
+    }
+
+    /**
+     * This method is overridden by our MainActivity class in order to handle RecyclerView item
+     * clicks.
+     *
+     * @param weatherForDay The weather for the day that was clicked
+     */
+    @Override
+    public void onClick(String weatherForDay) {
+        Context context = this;
+        Toast.makeText(context, weatherForDay, Toast.LENGTH_SHORT).show();
     }
 
     /*
