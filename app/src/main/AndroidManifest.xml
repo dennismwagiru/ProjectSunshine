@@ -28,6 +28,7 @@
                 android:name="android.support.PARENT_ATIVITY"
                 android:value=".MainActivity" />
         </activity>
+        <activity android:name=".SettingsActivity"></activity>
     </application>
 
 </manifest>
