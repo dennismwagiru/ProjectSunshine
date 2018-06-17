@@ -2,6 +2,7 @@ package joels.com.projectsunshine;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +28,8 @@ import joels.com.projectsunshine.utilities.NetworkUtils;
 import joels.com.projectsunshine.utilities.OpenWeatherJsonUtils;
 
 public class MainActivity extends AppCompatActivity implements ForecastAdapterOnClickHandler {
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private RecyclerView mRecyclerView;
     private ForecastAdapter forecastAdapter;
@@ -97,8 +100,9 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
     public void onClick(String weatherForDay) {
         Context context = this;
         Class destinationClass = DetailActivity.class;
-        Intent intent = new Intent(context, destinationClass);
-        startActivity(intent);
+        Intent intentToStartDetailClass = new Intent(context, destinationClass);
+        intentToStartDetailClass.putExtra(Intent.EXTRA_TEXT, weatherForDay);
+        startActivity(intentToStartDetailClass);
     }
 
     /*
@@ -159,7 +163,6 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
         }
 
         // Override the onPostExecute method to display the results of the network request
-
         @Override
         protected void onPostExecute(String[] weatherData) {
             // As soon as the data is finished loading, hide the loading indicator
@@ -173,6 +176,28 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
                 // If the weather data was null, show the error message
                 showErrorMessage();
             }
+        }
+    }
+
+    /**
+     * This method uses the URI scheme for showing a location found on a map.
+     * This super-handy intent is detailed in the "Common Intents" page of
+     * Android's developer site:
+     *
+     * @see <a"http://developer.android.com/guide/components/intents-common.html#Maps">
+     *
+     */
+
+    private void openLocationInMap() {
+        String addressString = "1600 Ampitheatre Parkway, CA";
+        Uri geoLocation = Uri.parse("geo:0,0?=" + addressString);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Log.d(TAG, "Couldn't call " + geoLocation.toString() + ", no receiving apps installed");
         }
     }
 
@@ -198,6 +223,11 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
         if (id == R.id.action_refresh) {
             forecastAdapter.setWeatherData(null);
             loadWeather();
+            return true;
+        }
+
+        if (id == R.id.action_map) {
+            openLocationInMap();
             return true;
         }
 
