@@ -19,6 +19,9 @@
 
     <!--Used in overflow menu to refresh weather data-->
     <string name="action_refresh">Refresh</string>
+    
+    <string name="title_activity_detail">Details</string>
+    <string name="title_activity_settings">Settings</string>
 
     <!--Add a string resource for your error message-->
     <string name="error_message">
