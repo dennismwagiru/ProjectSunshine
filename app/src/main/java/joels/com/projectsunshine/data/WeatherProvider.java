@@ -5,6 +5,7 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -126,7 +127,10 @@ public class WeatherProvider extends ContentProvider {
      */
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values){
-        throw new RuntimeException("Student, you need to implement the bulkInsert mehtod!");
+        for (ContentValues value: values) {
+            mOpenHelper.getWritableDatabase().insert(WeatherContract.WeatherEntry.TABLE_NAME, null, value);
+        }
+        return 0;
     }
 
     /**
