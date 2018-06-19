@@ -127,10 +127,12 @@ public class WeatherProvider extends ContentProvider {
      */
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values){
+        int i = 0;
         for (ContentValues value: values) {
             mOpenHelper.getWritableDatabase().insert(WeatherContract.WeatherEntry.TABLE_NAME, null, value);
+            i+=1;
         }
-        return 0;
+        return i;
     }
 
     /**
@@ -290,6 +292,7 @@ public class WeatherProvider extends ContentProvider {
      */
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
+        mOpenHelper.getWritableDatabase().delete(WeatherContract.WeatherEntry.TABLE_NAME, selection, selectionArgs);
         throw new RuntimeException("Student, you need to implement the delete method!");
     }
 
