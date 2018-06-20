@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
          * The ForecastAdapter is responsible for linking our weather data with the Views that
          * will end up displaying our weather data.
          */
-        forecastAdapter = new ForecastAdapter(this);
+        forecastAdapter = new ForecastAdapter(this, this);
 
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
         mRecyclerView.setAdapter(forecastAdapter);

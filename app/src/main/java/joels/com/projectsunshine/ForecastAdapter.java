@@ -1,6 +1,7 @@
 package joels.com.projectsunshine;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -20,6 +21,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
 
     private String[] mWeatherData;
 
+    private final Context mContext;
+
     /*
      * An on-click handler that we've defined to make it easy for an Activity to interface with
      * our RecyclerView
@@ -33,13 +36,16 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         void onClick(String weatherForDay);
     }
 
+    private Cursor mCursor;
+
     /**
      * Creates a ForecastAdapter.
      *
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
-    public ForecastAdapter(ForecastAdapterOnClickHandler clickHandler) {
+    public ForecastAdapter(@NonNull Context context, ForecastAdapterOnClickHandler clickHandler) {
+        mContext = context;
         mClickHandler = clickHandler;
     }
 
@@ -106,8 +112,14 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
      */
     @Override
     public void onBindViewHolder(ForecastAdapterViewHolder forecastAdapterViewHolder, int position) {
-        String weatherForThisDay = mWeatherData[position];
-        forecastAdapterViewHolder.mWeatherTextView.setText(weatherForThisDay);
+        mCursor.moveToPosition(position);
+
+        /*******************
+         * Weather Summary *
+         *******************/
+
+        /* Read date from the cursor */
+//        Long dateInMillis = mCursor.getLong(MainActivi)
     }
 
     /**
