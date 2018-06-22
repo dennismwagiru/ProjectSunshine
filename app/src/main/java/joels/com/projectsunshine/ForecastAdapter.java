@@ -12,6 +12,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import joels.com.projectsunshine.utilities.SunshineDateUtils;
+import joels.com.projectsunshine.utilities.SunshineWeatherUtils;
+
 // Extend RecyclerView.Adapter<ForecastAdapter.ForecastAdapterViewHolder>
 /**
  * {@link ForecastAdapter} exposes a list of weather forecasts to a
@@ -19,13 +22,13 @@ import android.widget.Toast;
  */
 public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ForecastAdapterViewHolder> {
 
-    private String[] mWeatherData;
-
     private final Context mContext;
 
     /*
-     * An on-click handler that we've defined to make it easy for an Activity to interface with
-     * our RecyclerView
+     * Below, we've defined an interface to handle clicks on items within this Adapter. In the
+     * constructor of our ForecastAdapter, we receive an instance of a class that has implemented
+     * said interface. We store that instance in this variable to call the onClick method whenever
+     * an item is clicked in the list.
      */
     private final ForecastAdapterOnClickHandler mClickHandler;
 
@@ -41,6 +44,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
     /**
      * Creates a ForecastAdapter.
      *
+     * @param context Used to talk to the UI and app resources.
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
@@ -57,11 +61,11 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
     */
     public class ForecastAdapterViewHolder extends RecyclerView.ViewHolder implements OnClickListener {
 
-        public final TextView mWeatherTextView;
+        final TextView weatherSummary;
 
         public ForecastAdapterViewHolder(View view){
             super(view);
-            mWeatherTextView = view.findViewById(R.id.tv_weather_data);
+            weatherSummary = view.findViewById(R.id.tv_weather_data);
             view.setOnClickListener(this);
         }
 
@@ -73,7 +77,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            String weatherForDay = mWeatherData[adapterPosition];
+            String weatherForDay = weatherSummary.getText().toString();
             mClickHandler.onClick(weatherForDay);
         }
     }
@@ -91,12 +95,12 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
      */
     @Override
     public ForecastAdapterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        Context context = viewGroup.getContext();
-        int layoutIdForListItem = R.layout.forecast_list_item;
-        LayoutInflater inflater = LayoutInflater.from(context);
-        boolean shouldAttachToParentImmediately = false;
+        View view = LayoutInflater
+                .from(mContext)
+                .inflate(R.layout.forecast_list_item, viewGroup, false);
 
-        View view = inflater.inflate(layoutIdForListItem, viewGroup, shouldAttachToParentImmediately);
+        view.setFocusable(true);
+
         return new ForecastAdapterViewHolder(view);
     }
 
@@ -118,8 +122,26 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
          * Weather Summary *
          *******************/
 
+        /* Generate a weather summary with the date, description, high and low. */
         /* Read date from the cursor */
-//        Long dateInMillis = mCursor.getLong(MainActivi)
+        Long dateInMillis = mCursor.getLong(MainActivity.INDEX_WEATHER_DATE);
+        /* Get human readable string using our utility method */
+        String dateString = SunshineDateUtils.getFriendlyDateString(mContext, dateInMillis, false);
+        /* Use the weatherId to obtain the proper description */
+        int weatherId = mCursor.getInt(MainActivity.INDEX_WEATHER_CONDITION_ID);
+        String description = SunshineWeatherUtils.getStringForWeatherCondition(mContext, weatherId);
+        /* Read high temperature from the cursor (in degrees celsius) */
+        double highInCelsius = mCursor.getDouble(MainActivity.INDEX_WEATHER_MAX_TEMP);
+        /* Read low temperature from the cursor (in degrees celsius) */
+        double lowInCelsius = mCursor.getDouble(MainActivity.INDEX_WEATHER_MIN_TEMP);
+
+        String highAndLowTemperature = SunshineWeatherUtils.formatHighLows(mContext, highInCelsius, lowInCelsius);
+
+        String weatherSummary = dateString + " - " + description + " - " + highAndLowTemperature;
+
+        /* Display the summary that you created above */
+        forecastAdapterViewHolder.weatherSummary.setText(weatherSummary);
+
     }
 
     /**
@@ -130,19 +152,20 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
      */
     @Override
     public int getItemCount() {
-        if (mWeatherData == null) return 0;
-        return mWeatherData.length;
+        if (mCursor == null) return 0;
+        return mCursor.getCount();
     }
 
     /**
-     * This method is used to set the weather forecast on a ForecastAdapter if we've already
-     * created one. This is handy when we get new data from the web but don't want to create a
-     * new ForecastAdapter to display it.
+     * Swaps the cursor used by the ForecastAdapter for its weather data. This method is called by
+     * MainActivity after a load has finished, as well as when the Loader responsible for loading
+     * the weather data is reset. When this method is called, we assume we have a completely new
+     * set of data, so we call notifyDataSetChanged to tell the RecyclerView to update.
      *
-     * @param weatherData The new weather data to be displayed.
+     * @param newCursor the new cursor to use as ForecastAdapter's data source
      */
-    public void setWeatherData(String[] weatherData) {
-        mWeatherData = weatherData;
+    void swapCursor(Cursor newCursor) {
+        mCursor = newCursor;
         notifyDataSetChanged();
     }
 }
